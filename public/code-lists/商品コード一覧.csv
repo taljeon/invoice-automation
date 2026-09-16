@@ -1,0 +1,8 @@
+# Synthetic examples only
+# No real customer master records
+# Product alias lookup example
+# Five header lines are expected by the reference parser
+,code,name
+,D1,サンプル一号
+,D2,サンプル二号
+,D3,サンプル三号

@@ -1,0 +1,26 @@
+{
+  "name": "invoice-automation-public-functions",
+  "scripts": {
+    "build": "tsc",
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "firebase-admin": "^14.4.0",
+    "firebase-functions": "^7.4.0",
+    "@google-cloud/vision": "^6.1.0",
+    "@google-cloud/storage": "^8.1.0",
+    "@napi-rs/canvas": "^1.0.9",
+    "pdfjs-dist": "^6.3.289"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "private": true
+}

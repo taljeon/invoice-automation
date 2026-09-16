@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function ownsUser(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // A client may enqueue an immutable job; only the Admin SDK may change its status/results.
+    match /ocr_jobs/{jobId} {
+      allow create: if signedIn()
+        && jobId.matches('[A-Za-z0-9_-]{1,128}')
+        && request.resource.data.keys().hasOnly(['status', 'fileName', 'storagePath', 'userId', 'createdAt'])
+        && request.resource.data.keys().hasAll(['status', 'fileName', 'storagePath', 'userId', 'createdAt'])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.fileName is string
+        && request.resource.data.fileName.matches('[A-Za-z0-9][A-Za-z0-9._-]{0,179}[.][pP][dD][fF]')
+        && !request.resource.data.fileName.matches('.*[.][.].*')
+        && request.resource.data.storagePath == 'uploads/' + jobId + '/' + request.resource.data.fileName
+        && request.resource.data.createdAt == request.time;
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /users/{uid}/lineItems/{itemId} {
+      allow read, create, update, delete: if ownsUser(uid);
+    }
+
+    // Shared synthetic supplier catalog, provisioned only by an operator using the Admin SDK.
+    match /companies/{companyId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}

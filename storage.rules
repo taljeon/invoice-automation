@@ -1,0 +1,35 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function validPdf(fileName) {
+      return request.resource.size > 0
+        && request.resource.size <= 20 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf'
+        && fileName.matches('[A-Za-z0-9][A-Za-z0-9._-]{0,179}[.][pP][dD][fF]')
+        && !fileName.matches('.*[.][.].*');
+    }
+    function ownedJob(jobId, fileName) {
+      let job = firestore.get(/databases/(default)/documents/ocr_jobs/$(jobId));
+      return request.auth != null
+        && job.data.userId == request.auth.uid
+        && job.data.fileName == fileName
+        && job.data.storagePath == 'uploads/' + jobId + '/' + fileName;
+    }
+
+    match /uploads/{jobId}/{fileName} {
+      allow create: if resource == null && ownedJob(jobId, fileName) && validPdf(fileName)
+        && firestore.get(/databases/(default)/documents/ocr_jobs/$(jobId)).data.status == 'pending';
+      allow read: if ownedJob(jobId, fileName);
+      // Uploaded originals are immutable. Retention/cleanup is an explicit operator task.
+      allow update, delete: if false;
+    }
+
+    // Legacy HTTP OCR path: files stay within the authenticated user's directory.
+    match /invoices/{uid}/{fileName} {
+      allow create: if resource == null && request.auth != null && request.auth.uid == uid && validPdf(fileName);
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow update: if false;
+    }
+    match /{allPaths=**} { allow read, write: if false; }
+  }
+}
