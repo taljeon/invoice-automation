@@ -1,3 +1,7 @@
+Invoice Automation helps you turn Japanese invoice PDFs into tables you can review and edit.
+It lets you check amounts against the original invoice and export the reviewed items for purchase and sales records.
+The included demo uses made-up invoices on your computer; reading real invoices automatically needs separately configured online services.
+
 # Invoice Automation
 
 [English](README.md) · [日本語](README.ja.md)
